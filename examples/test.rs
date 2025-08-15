@@ -4,7 +4,11 @@ fn main() {
     let source = String::from(r#"fn main {
     let {a: 25, b: 30, str: "Hello"};
 
-    ret a + b;
+    ret calc:{5, calc:{a, b}};
+}
+
+fn calc:{a, b} {
+    ret +{a, -{b, 5}};
 }"#);
 
     let mut lexer = Lexer::new(source);

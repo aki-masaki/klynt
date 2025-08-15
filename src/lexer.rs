@@ -9,6 +9,7 @@ pub enum TokenKind {
     Number,
     StringLiteral,
     Plus,
+    Minus,
     LBrace,
     RBrace,
     Semicolon,
@@ -66,6 +67,7 @@ impl Lexer {
                 ':' => Some(self.new_token(TokenKind::Colon, ":")),
                 ',' => Some(self.new_token(TokenKind::Comma, ",")),
                 '+' => Some(self.new_token(TokenKind::Plus, "+")),
+                '-' => Some(self.new_token(TokenKind::Minus, "-")),
                 '"' => {
                     let mut literal = String::from("");
                     let mut length = 1;
