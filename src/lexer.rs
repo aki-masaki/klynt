@@ -3,6 +3,7 @@ pub enum TokenKind {
     Fn,
     Return,
     Identifier,
+    Number,
     LBrace,
     RBrace,
     Semicolon,
@@ -21,6 +22,7 @@ pub struct Lexer {
     position: usize,
     line: usize,
     column: usize,
+    start_column: usize,
 }
 
 impl Lexer {
@@ -30,6 +32,7 @@ impl Lexer {
             position: 0,
             line: 1,
             column: 1,
+            start_column: 1,
         }
     }
 
@@ -37,35 +40,38 @@ impl Lexer {
         self.skip_whitespace();
 
         let current_char = self.current_char();
-        let mut token: Option<Token> = None;
+
+        self.start_column = self.column;
 
         if self.position == self.input.len() {
-            return None
+            return None;
         }
 
-        if self.lookup_ahead(String::from("fn")) {
-            token = Some(self.new_token(TokenKind::Fn, String::from("fn")));
-
-            self.advance(2);
-        } else if self.lookup_ahead(String::from("return")) {
-            token = Some(self.new_token(TokenKind::Return, String::from("return")));
-
-            self.advance(6);
+        if self.lookup_ahead("fn") {
+            Some(self.new_token(TokenKind::Fn, "fn"))
+        } else if self.lookup_ahead("return") {
+            Some(self.new_token(TokenKind::Return, "return"))
         } else if let Some(char) = current_char {
             match char {
-                '{' => {
-                    token = Some(self.new_token(TokenKind::LBrace, String::from('{')));
-                    self.advance(1);
+                '{' => Some(self.new_token(TokenKind::LBrace, "{")),
+                '}' => Some(self.new_token(TokenKind::RBrace, "}")),
+                ';' => Some(self.new_token(TokenKind::Semicolon, ";")),
+                c if c.is_numeric() => {
+                    let mut number = String::from(c);
+                    let mut length = 1;
+
+                    while let Some(next_char) = self.peek(length) {
+                        if !next_char.is_numeric() {
+                            break;
+                        }
+
+                        number.push(next_char);
+                        length += 1;
+                    }
+
+                    Some(self.new_token(TokenKind::Number, number.as_str()))
                 }
-                '}' => {
-                    token = Some(self.new_token(TokenKind::RBrace, String::from('}')));
-                    self.advance(1);
-                }
-                ';' => {
-                    token = Some(self.new_token(TokenKind::Semicolon, String::from(';')));
-                    self.advance(1);
-                }
-                c if c.is_alphanumeric() => {
+                c if c.is_alphabetic() => {
                     let mut identifier = String::from(c);
                     let mut length = 1;
 
@@ -78,17 +84,15 @@ impl Lexer {
                         length += 1;
                     }
 
-                    token = Some(self.new_token(TokenKind::Identifier, identifier));
-
-                    self.advance(length);
+                    Some(self.new_token(TokenKind::Identifier, identifier.as_str()))
                 }
                 _ => {
-                    println!("Unexpected character: \"{char}\"")
+                    panic!("Unexpected character: \"{char}\"");
                 }
-            };
+            }
+        } else {
+            None
         }
-
-        token
     }
 
     pub fn advance(&mut self, n: usize) -> Option<char> {
@@ -128,11 +132,9 @@ impl Lexer {
         None
     }
 
-    pub fn lookup_ahead(&self, s: String) -> bool {
-        let chars = s.chars().collect::<Vec<char>>();
-
-        for (i, item) in chars.iter().enumerate() {
-            if self.input[self.position + i] != *item {
+    pub fn lookup_ahead(&self, s: &str) -> bool {
+        for (i, item) in s.chars().enumerate() {
+            if self.input[self.position + i] != item {
                 return false;
             }
         }
@@ -142,20 +144,22 @@ impl Lexer {
 
     pub fn skip_whitespace(&mut self) {
         while let Some(c) = self.current_char() {
-            if c.is_whitespace() {
-                self.advance(1);
-            } else {
+            if !c.is_whitespace() {
                 break;
             }
+
+            self.advance(1);
         }
     }
 
-    pub fn new_token(&self, kind: TokenKind, lexeme: String) -> Token {
+    pub fn new_token(&mut self, kind: TokenKind, lexeme: &str) -> Token {
+        self.advance(lexeme.len());
+
         Token {
             kind,
-            lexeme,
+            lexeme: String::from(lexeme),
             line: self.line,
-            column: self.column,
+            column: self.start_column,
         }
     }
 }
