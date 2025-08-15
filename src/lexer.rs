@@ -2,8 +2,13 @@
 pub enum TokenKind {
     Fn,
     Return,
+    Let,
+    Colon,
+    Comma,
     Identifier,
     Number,
+    StringLiteral,
+    Plus,
     LBrace,
     RBrace,
     Semicolon,
@@ -49,13 +54,34 @@ impl Lexer {
 
         if self.lookup_ahead("fn") {
             Some(self.new_token(TokenKind::Fn, "fn"))
-        } else if self.lookup_ahead("return") {
-            Some(self.new_token(TokenKind::Return, "return"))
+        } else if self.lookup_ahead("ret") {
+            Some(self.new_token(TokenKind::Return, "ret"))
+        } else if self.lookup_ahead("let") {
+            Some(self.new_token(TokenKind::Let, "let"))
         } else if let Some(char) = current_char {
             match char {
                 '{' => Some(self.new_token(TokenKind::LBrace, "{")),
                 '}' => Some(self.new_token(TokenKind::RBrace, "}")),
                 ';' => Some(self.new_token(TokenKind::Semicolon, ";")),
+                ':' => Some(self.new_token(TokenKind::Colon, ":")),
+                ',' => Some(self.new_token(TokenKind::Comma, ",")),
+                '+' => Some(self.new_token(TokenKind::Plus, "+")),
+                '"' => {
+                    let mut literal = String::from("");
+                    let mut length = 1;
+
+                    while let Some(next_char) = self.peek(length) {
+                        if next_char == '"' {
+                            break;
+                        }
+
+                        literal.push(next_char);
+                        length += 1;
+                    }
+
+                    self.advance(2);
+                    Some(self.new_token(TokenKind::StringLiteral, literal.as_str()))
+                }
                 c if c.is_numeric() => {
                     let mut number = String::from(c);
                     let mut length = 1;
