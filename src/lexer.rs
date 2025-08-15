@@ -1,7 +1,11 @@
 #[derive(Debug, PartialEq)]
 pub enum TokenKind {
     Fn,
+    Return,
     Identifier,
+    LBrace,
+    RBrace,
+    Semicolon,
 }
 
 #[derive(Debug, PartialEq)]
@@ -35,17 +39,32 @@ impl Lexer {
         let current_char = self.current_char();
         let mut token: Option<Token> = None;
 
+        if self.position == self.input.len() {
+            return None
+        }
+
         if self.lookup_ahead(String::from("fn")) {
-            token = Some(Token {
-                kind: TokenKind::Fn,
-                lexeme: String::from("fn"),
-                line: self.line,
-                column: self.column,
-            });
+            token = Some(self.new_token(TokenKind::Fn, String::from("fn")));
 
             self.advance(2);
-        } else {
-            match current_char {
+        } else if self.lookup_ahead(String::from("return")) {
+            token = Some(self.new_token(TokenKind::Return, String::from("return")));
+
+            self.advance(6);
+        } else if let Some(char) = current_char {
+            match char {
+                '{' => {
+                    token = Some(self.new_token(TokenKind::LBrace, String::from('{')));
+                    self.advance(1);
+                }
+                '}' => {
+                    token = Some(self.new_token(TokenKind::RBrace, String::from('}')));
+                    self.advance(1);
+                }
+                ';' => {
+                    token = Some(self.new_token(TokenKind::Semicolon, String::from(';')));
+                    self.advance(1);
+                }
                 c if c.is_alphanumeric() => {
                     let mut identifier = String::from(c);
                     let mut length = 1;
@@ -59,16 +78,13 @@ impl Lexer {
                         length += 1;
                     }
 
-                    token = Some(Token {
-                        kind: TokenKind::Identifier,
-                        lexeme: identifier,
-                        line: self.line,
-                        column: self.column,
-                    });
+                    token = Some(self.new_token(TokenKind::Identifier, identifier));
 
                     self.advance(length);
                 }
-                _ => {}
+                _ => {
+                    println!("Unexpected character: \"{char}\"")
+                }
             };
         }
 
@@ -76,28 +92,32 @@ impl Lexer {
     }
 
     pub fn advance(&mut self, n: usize) -> Option<char> {
-        self.position += n;
-
-        for i in 0..n {
-            if let Some(c) = self.peek(i) {
-                if c == '\n' {
-                    self.line += 1;
-                    self.column = 1;
-                } else {
-                    self.column += 1;
-                }
+        for _ in 0..n {
+            if self.position >= self.input.len() {
+                return None;
             }
+
+            let c = self.input[self.position];
+
+            if c == '\n' {
+                self.line += 1;
+                self.column = 1;
+            } else {
+                self.column += 1;
+            }
+
+            self.position += 1;
         }
 
-        if self.position < self.input.len() {
-            return Some(self.input[self.position]);
-        }
-
-        None
+        self.current_char()
     }
 
-    pub fn current_char(&self) -> char {
-        self.input[self.position]
+    pub fn current_char(&self) -> Option<char> {
+        if self.position < self.input.len() {
+            Some(self.input[self.position])
+        } else {
+            None
+        }
     }
 
     pub fn peek(&self, n: usize) -> Option<char> {
@@ -121,12 +141,21 @@ impl Lexer {
     }
 
     pub fn skip_whitespace(&mut self) {
-        if self.current_char() == ' ' {
-            self.advance(1);
+        while let Some(c) = self.current_char() {
+            if c.is_whitespace() {
+                self.advance(1);
+            } else {
+                break;
+            }
         }
+    }
 
-        while let Some(' ') = self.peek(1) {
-            self.advance(1);
+    pub fn new_token(&self, kind: TokenKind, lexeme: String) -> Token {
+        Token {
+            kind,
+            lexeme,
+            line: self.line,
+            column: self.column,
         }
     }
 }

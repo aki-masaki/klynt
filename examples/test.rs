@@ -1,7 +1,9 @@
 use klynt::lexer::Lexer;
 
 fn main() {
-    let source = String::from(r#"fn main { return 42; }"#);
+    let source = String::from(r#"fn main {
+        return 42;
+    }"#);
 
     let mut lexer = Lexer::new(source);
 
