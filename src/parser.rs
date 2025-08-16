@@ -4,6 +4,7 @@ use crate::ast::Operator;
 use crate::ast::Value;
 use crate::ast::Variable;
 use crate::lexer::Lexer;
+use crate::lexer::Token;
 use crate::lexer::TokenKind;
 
 pub struct Parser {
@@ -77,45 +78,29 @@ impl Parser {
                 }
                 TokenKind::Let => {
                     let start = token.column;
-                    let mut vars: Vec<Variable> = Vec::new();
 
-                    if let Some(token) = self.lexer.next_token()
-                        && token.kind == TokenKind::LBrace
-                    {
-                        let mut current_name: Option<String> = None;
-
-                        while let Some(token) = self.lexer.next_token() {
-                            match token.kind {
-                                TokenKind::RBrace => {
-                                    break;
-                                }
-                                TokenKind::Identifier => {
-                                    current_name = Some(token.lexeme);
-                                }
-                                TokenKind::Colon => {
-                                    let expression = self.parse_expression();
-
-                                    if let Some(name) = current_name.take() {
-                                        vars.push(Variable(name, expression));
-                                    }
-                                }
-                                TokenKind::Comma => {
-                                    
-                                }
-                                _ => {
-                                    panic!(
-                                        "Unexpected token {:?} in variable declaration",
-                                        token.lexeme
-                                    );
-                                }
-                            }
-                        }
-                    } else {
-                        panic!("Expected '{{' after 'let' at column {}", token.column);
-                    }
-
-                    nodes.push(ASTNode::VariableDeclaration { start, vars })
+                    nodes.push(ASTNode::VariableDeclaration {
+                        start,
+                        vars: self.parse_vars(token),
+                    })
                 }
+                TokenKind::Set => {
+                    let start = token.column;
+
+                    nodes.push(ASTNode::VariableSetting {
+                        start,
+                        vars: self.parse_vars(token),
+                    })
+                }
+                TokenKind::Const => {
+                   let start = token.column;
+
+                    nodes.push(ASTNode::ConstDeclaration {
+                        start,
+                        vars: self.parse_vars(token),
+                    })
+                }
+
                 TokenKind::Return => {
                     let start = token.column;
                     let expression = self.parse_expression();
@@ -179,5 +164,44 @@ impl Parser {
         }
 
         expression
+    }
+
+    fn parse_vars(&mut self, token: Token) -> Vec<Variable> {
+        let mut vars: Vec<Variable> = Vec::new();
+
+        if let Some(token) = self.lexer.next_token()
+            && token.kind == TokenKind::LBrace
+        {
+            let mut current_name: Option<String> = None;
+
+            while let Some(token) = self.lexer.next_token() {
+                match token.kind {
+                    TokenKind::RBrace => {
+                        break;
+                    }
+                    TokenKind::Identifier => {
+                        current_name = Some(token.lexeme);
+                    }
+                    TokenKind::Colon => {
+                        let expression = self.parse_expression();
+
+                        if let Some(name) = current_name.take() {
+                            vars.push(Variable(name, expression));
+                        }
+                    }
+                    TokenKind::Comma => {}
+                    _ => {
+                        panic!("Unexpected token {:?}", token.lexeme);
+                    }
+                }
+            }
+        } else {
+            panic!(
+                "Expected '{{' after '{}' at column {}",
+                token.lexeme, token.column
+            );
+        }
+
+        vars
     }
 }

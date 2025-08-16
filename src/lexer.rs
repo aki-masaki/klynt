@@ -3,6 +3,8 @@ pub enum TokenKind {
     Fn,
     Return,
     Let,
+    Set,
+    Const,
     Colon,
     Comma,
     Identifier,
@@ -59,6 +61,10 @@ impl Lexer {
             Some(self.new_token(TokenKind::Return, "ret"))
         } else if self.lookup_ahead("let") {
             Some(self.new_token(TokenKind::Let, "let"))
+        }  else if self.lookup_ahead("set") {
+            Some(self.new_token(TokenKind::Set, "set"))
+        } else if self.lookup_ahead("const") {
+            Some(self.new_token(TokenKind::Const, "const"))
         } else if let Some(char) = current_char {
             match char {
                 '{' => Some(self.new_token(TokenKind::LBrace, "{")),

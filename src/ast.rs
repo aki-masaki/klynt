@@ -36,6 +36,14 @@ pub enum ASTNode {
         start: usize,
         vars: Vec<Variable>,
     },
+    ConstDeclaration {
+        start: usize,
+        vars: Vec<Variable>,
+    },
+    VariableSetting {
+        start: usize,
+        vars: Vec<Variable>,
+    },
     ReturnExpression {
         start: usize,
         expression: Expression,
