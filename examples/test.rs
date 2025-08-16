@@ -16,7 +16,7 @@ fn main() {
 fn calc:{a, b} {
     const {offset: 10};
 
-    ret +{a, +{b, offset}};
+    ret +{a, -{b, offset}};
 }
 "#,
     );

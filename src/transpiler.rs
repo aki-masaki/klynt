@@ -1,3 +1,4 @@
+use crate::ast::Operator;
 use crate::ast::ASTNode;
 use crate::ast::Expression;
 use crate::ast::Value;
@@ -110,7 +111,12 @@ impl Transpiler {
                 let right = Transpiler::transpile_expression(right);
 
                 // TODO: handle different operators
-                format!("{left}+{right}")
+                format!("({left}{}{right})", match op {
+                    Operator::Plus => "+",
+                    Operator::Minus => "-",
+                    Operator::Times => "*",
+                    Operator::Divided => "/"
+                })
             }
         }
     }

@@ -10,7 +10,9 @@ pub struct Variable(pub String, pub Expression);
 #[derive(Debug, PartialEq)]
 pub enum Operator {
     Plus,
-    Minus
+    Minus,
+    Times,
+    Divided
 }
 
 #[derive(Debug, PartialEq)]
