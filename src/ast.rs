@@ -30,7 +30,8 @@ pub enum Expression {
     FunctionCall {
         function: String,
         parameters: Vec<Box<Expression>>
-    }
+    },
+    ArrayExpression(Vec<Box<Expression>>)
 }
 
 #[derive(Debug, PartialEq)]

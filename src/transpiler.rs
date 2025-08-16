@@ -109,10 +109,7 @@ impl Transpiler {
 
                 code.push_str(format!("else if ({expression}) {{\n{body}\n}}\n").as_str());
             }
-            ASTNode::OrExpression {
-                start: _,
-                content,
-            } => {
+            ASTNode::OrExpression { start: _, content } => {
                 let body = content
                     .iter()
                     .map(Transpiler::transpile_node)
@@ -163,6 +160,15 @@ impl Transpiler {
                         Operator::Equal => "=",
                     }
                 )
+            }
+            Expression::ArrayExpression(items) => {
+                let items = items
+                    .iter()
+                    .map(|x| Transpiler::transpile_expression(x))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                format!("[{items}]")
             }
         }
     }

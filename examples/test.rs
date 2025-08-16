@@ -8,6 +8,8 @@ fn main() {
     let {a: 25, b: 30, str: "Hello"};
     let {c: +{a, b}};
 
+    let {arr: [1, 2, 3, "hi", a, +{b, 10}, call{calc:{5, 5}}]};
+
     set {a: 40};
 
     call{calc:{20, call{calc:{10, 20}}}};

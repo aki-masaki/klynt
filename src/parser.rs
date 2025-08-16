@@ -303,6 +303,19 @@ impl Parser {
                         parameters,
                     }
                 }
+                TokenKind::LBracket => {
+                    let mut items: Vec<Box<Expression>> = vec![Box::new(self.parse_expression())];
+
+                    while let Some(token) = self.lexer.next_token() {
+                        if token.kind == TokenKind::Comma {
+                            items.push(Box::new(self.parse_expression()));
+                        } else if token.kind == TokenKind::RBracket {
+                            break;
+                        }
+                    }
+
+                    expression = Expression::ArrayExpression(items);
+                }
                 TokenKind::Comma => {
                     return self.parse_expression();
                 }
