@@ -8,7 +8,7 @@ fn main() {
 }
 
 fn calc:{a, b} {
-
+    ret 20;
 }
 "#,
     );

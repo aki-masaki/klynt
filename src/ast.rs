@@ -1,11 +1,16 @@
 #[derive(Debug, PartialEq)]
 pub enum Value {
     Literal(String),
-    Number(i16)
+    Number(i16),
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Variable(pub String, pub Value);
+
+#[derive(Debug, PartialEq)]
+pub enum Expression {
+    Value(Value),
+}
 
 #[derive(Debug, PartialEq)]
 pub enum ASTNode {
@@ -13,10 +18,14 @@ pub enum ASTNode {
         start: usize,
         name: String,
         parameters: Vec<String>,
-        content: Vec<ASTNode>
+        content: Vec<ASTNode>,
     },
     VariableDeclaration {
         start: usize,
-        vars: Vec<Variable>
-    }
+        vars: Vec<Variable>,
+    },
+    ReturnExpression {
+        start: usize,
+        expression: Expression,
+    },
 }

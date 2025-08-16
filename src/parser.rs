@@ -1,4 +1,5 @@
 use crate::ast::ASTNode;
+use crate::ast::Expression;
 use crate::ast::Value;
 use crate::ast::Variable;
 use crate::lexer::Lexer;
@@ -51,6 +52,12 @@ impl Parser {
 
                                 if token.kind == TokenKind::Identifier {
                                     parameters.push(token.lexeme);
+                                }
+                            }
+
+                            if let Some(token) = self.lexer.next_token() {
+                                if token.kind == TokenKind::LBrace {
+                                    content = self.parse(true);
                                 }
                             }
                         }
@@ -123,6 +130,31 @@ impl Parser {
                     }
 
                     nodes.push(ASTNode::VariableDeclaration { start, vars })
+                }
+                TokenKind::Return => {
+                    let start = token.column;
+                    let mut expression = Expression::Value(Value::Literal(String::new()));
+
+                    if let Some(token) = self.lexer.next_token() {
+                        match token.kind {
+                            TokenKind::StringLiteral => {
+                                expression = Expression::Value(Value::Literal(token.lexeme));
+                            }
+                            TokenKind::Number => {
+                                expression = Expression::Value(Value::Number(
+                                    token.lexeme.parse::<i16>().unwrap(),
+                                ));
+                            }
+                            TokenKind::Semicolon => {
+                                panic!("Expected expression after return at column: {start}");
+                            }
+                            _ => {
+                                panic!("Unexpected token after return at column: {start}");
+                            }
+                        }
+                    }
+
+                    nodes.push(ASTNode::ReturnExpression { start, expression })
                 }
                 _ => {}
             }
