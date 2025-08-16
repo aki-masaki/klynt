@@ -9,6 +9,7 @@ fn main() {
     let {c: +{a, b}};
 
     let {arr: [1, 2, 3, "hi", a, +{b, 10}, call{calc:{5, 5}}]};
+    let {object: (data: "hello", count: 0)};
 
     set {a: 40};
 
@@ -36,6 +37,4 @@ fn calc:{a, b} {
     let transpiler = Transpiler::new(parser.parse(false));
 
     println!("{}", transpiler.transpile());
-    //
-    //println!("{:?}", parser.parse(false));
 }

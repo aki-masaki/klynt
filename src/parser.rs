@@ -6,6 +6,7 @@ use crate::ast::Variable;
 use crate::lexer::Lexer;
 use crate::lexer::Token;
 use crate::lexer::TokenKind;
+use std::collections::HashMap;
 
 pub struct Parser {
     lexer: Lexer,
@@ -316,6 +317,27 @@ impl Parser {
 
                     expression = Expression::ArrayExpression(items);
                 }
+                TokenKind::LPar => {
+                    let mut hash_map = HashMap::new();
+
+                    let mut current_name: Option<String> = None;
+
+                    while let Some(token) = self.lexer.next_token() {
+                        if token.kind == TokenKind::Identifier {
+                            current_name = Some(token.lexeme);
+                        } else if token.kind == TokenKind::Colon {
+                            let expr = self.parse_expression();
+
+                            if let Some(name) = current_name.take() {
+                                hash_map.insert(name, expr);
+                            }
+                        } else if token.kind == TokenKind::RPar {
+                            break;
+                        }
+                    }
+
+                    expression = Expression::ObjectExpression(hash_map);
+                }
                 TokenKind::Comma => {
                     return self.parse_expression();
                 }
@@ -324,8 +346,8 @@ impl Parser {
                 }
                 _ => {
                     panic!(
-                        "Unexpected token: {} at column: {}",
-                        token.lexeme, token.column
+                        "Unexpected token: {} at column: {} line: {}",
+                        token.lexeme, token.column, token.line
                     );
                 }
             }
@@ -363,7 +385,10 @@ impl Parser {
                     }
                     TokenKind::Comma => {}
                     _ => {
-                        panic!("Unexpected token {:?}", token.lexeme);
+                        panic!(
+                            "Unexpected token {:?} at {}:{}",
+                            token.lexeme, token.line, token.column
+                        );
                     }
                 }
             }

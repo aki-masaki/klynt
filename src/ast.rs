@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, PartialEq)]
 pub enum Value {
     Literal(String),
@@ -15,7 +17,7 @@ pub enum Operator {
     Divided,
     Gt,
     Lt,
-    Equal
+    Equal,
 }
 
 #[derive(Debug, PartialEq)]
@@ -25,13 +27,14 @@ pub enum Expression {
     Binary {
         left: Box<Expression>,
         op: Operator,
-        right: Box<Expression>
+        right: Box<Expression>,
     },
     FunctionCall {
         function: String,
-        parameters: Vec<Box<Expression>>
+        parameters: Vec<Box<Expression>>,
     },
-    ArrayExpression(Vec<Box<Expression>>)
+    ArrayExpression(Vec<Box<Expression>>),
+    ObjectExpression(HashMap<String, Expression>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -62,15 +65,15 @@ pub enum ASTNode {
     WhenExpression {
         start: usize,
         expression: Expression,
-        content: Vec<ASTNode>
+        content: Vec<ASTNode>,
     },
     OrWhenExpression {
         start: usize,
         expression: Expression,
-        content: Vec<ASTNode>
+        content: Vec<ASTNode>,
     },
     OrExpression {
         start: usize,
-        content: Vec<ASTNode>
-    }
+        content: Vec<ASTNode>,
+    },
 }

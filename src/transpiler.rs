@@ -166,9 +166,14 @@ impl Transpiler {
                     .iter()
                     .map(|x| Transpiler::transpile_expression(x))
                     .collect::<Vec<_>>()
-                    .join(", ");
+                    .join(",");
 
                 format!("[{items}]")
+            }
+            Expression::ObjectExpression(hashmap) => {
+                let obj = hashmap.iter().map(|x| format!("{}: {}", x.0, Transpiler::transpile_expression(x.1))).collect::<Vec<_>>().join(",");
+
+                format!("{{{obj}}}")
             }
         }
     }

@@ -9,6 +9,7 @@ pub enum TokenKind {
     When,
     OrWhen,
     Or,
+    Obj,
     Colon,
     Comma,
     Identifier,
@@ -25,6 +26,8 @@ pub enum TokenKind {
     RBrace,
     LBracket,
     RBracket,
+    LPar,
+    RPar,
     Semicolon,
 }
 
@@ -100,6 +103,8 @@ impl Lexer {
                 '=' => Some(self.new_token(TokenKind::Equal, "=")),
                 '[' => Some(self.new_token(TokenKind::LBracket, "[")),
                 ']' => Some(self.new_token(TokenKind::RBracket, "]")),
+                '(' => Some(self.new_token(TokenKind::LPar, "(")),
+                ')' => Some(self.new_token(TokenKind::RPar, ")")),
                 '"' => {
                     let mut literal = String::from("");
                     let mut length = 1;
@@ -199,7 +204,7 @@ impl Lexer {
             }
         }
 
-        true
+        !self.input[self.position + s.len()].is_alphanumeric()
     }
 
     fn skip_whitespace(&mut self) {
