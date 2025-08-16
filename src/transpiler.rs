@@ -49,6 +49,37 @@ impl Transpiler {
 
                 code.push_str(format!("let {vars};").as_str());
             }
+            ASTNode::Expression(expression) => {
+                code.push_str(
+                    format!("{};", Transpiler::transpile_expression(expression)).as_str(),
+                );
+            }
+            ASTNode::VariableSetting { start: _, vars } => {
+                let vars = vars
+                    .iter()
+                    .map(|v| format!("{}={}", v.0, Transpiler::transpile_expression(&v.1)))
+                    .collect::<Vec<_>>()
+                    .join(";");
+
+                code.push_str(format!("{vars};").as_str());
+            }
+            ASTNode::ReturnExpression {
+                start: _,
+                expression,
+            } => {
+                code.push_str(
+                    format!("return {};", Transpiler::transpile_expression(expression)).as_str(),
+                );
+            }
+            ASTNode::ConstDeclaration { start: _, vars } => {
+                let vars = vars
+                    .iter()
+                    .map(|v| format!("{}={}", v.0, Transpiler::transpile_expression(&v.1)))
+                    .collect::<Vec<_>>()
+                    .join(",");
+
+                code.push_str(format!("const {vars};").as_str());
+            }
             _ => {}
         }
 

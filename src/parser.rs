@@ -217,7 +217,6 @@ impl Parser {
                         function: name,
                         parameters,
                     }
-
                 }
                 TokenKind::Semicolon => {
                     panic!("Expected expression at column: {}", token.column);
@@ -245,6 +244,10 @@ impl Parser {
             while let Some(token) = self.lexer.next_token() {
                 match token.kind {
                     TokenKind::RBrace => {
+                        while let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::RBrace
+                        {}
+
                         break;
                     }
                     TokenKind::Identifier => {

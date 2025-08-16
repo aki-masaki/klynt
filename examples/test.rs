@@ -1,6 +1,6 @@
-use klynt::transpiler::Transpiler;
 use klynt::lexer::Lexer;
 use klynt::parser::Parser;
+use klynt::transpiler::Transpiler;
 
 fn main() {
     let source = String::from(
