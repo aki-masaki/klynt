@@ -1,3 +1,4 @@
+use klynt::transpiler::Transpiler;
 use klynt::lexer::Lexer;
 use klynt::parser::Parser;
 
@@ -22,6 +23,7 @@ fn calc:{a, b} {
 
     let lexer = Lexer::new(source);
     let mut parser = Parser::new(lexer);
+    let transpiler = Transpiler::new(parser.parse(false));
 
-    println!("{:?}", parser.parse(false));
+    println!("{}", transpiler.transpile());
 }
