@@ -21,6 +21,10 @@ pub enum Expression {
         left: Box<Expression>,
         op: Operator,
         right: Box<Expression>
+    },
+    FunctionCall {
+        function: String,
+        parameters: Vec<Box<Expression>>
     }
 }
 
@@ -48,4 +52,5 @@ pub enum ASTNode {
         start: usize,
         expression: Expression,
     },
+    Expression(Expression)
 }

@@ -93,14 +93,47 @@ impl Parser {
                     })
                 }
                 TokenKind::Const => {
-                   let start = token.column;
+                    let start = token.column;
 
                     nodes.push(ASTNode::ConstDeclaration {
                         start,
                         vars: self.parse_vars(token),
                     })
                 }
+                TokenKind::Call => {
+                    let mut name = String::new();
+                    let mut parameters: Vec<Box<Expression>> = Vec::new();
 
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                        && let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::Identifier
+                    {
+                        name = token.lexeme;
+
+                        if let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::Colon
+                            && let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::LBrace
+                        {
+                            parameters.push(Box::new(self.parse_expression()));
+
+                            while let Some(token) = self.lexer.next_token() {
+                                match token.kind {
+                                    TokenKind::Comma => {
+                                        parameters.push(Box::new(self.parse_expression()));
+                                    }
+                                    _ => break,
+                                }
+                            }
+                        }
+                    }
+
+                    nodes.push(ASTNode::Expression(Expression::FunctionCall {
+                        function: name,
+                        parameters,
+                    }))
+                }
                 TokenKind::Return => {
                     let start = token.column;
                     let expression = self.parse_expression();
@@ -150,6 +183,41 @@ impl Parser {
                         },
                         right: Box::new(right),
                     }
+                }
+                TokenKind::Call => {
+                    let mut name = String::new();
+                    let mut parameters: Vec<Box<Expression>> = Vec::new();
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                        && let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::Identifier
+                    {
+                        name = token.lexeme;
+
+                        if let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::Colon
+                            && let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::LBrace
+                        {
+                            parameters.push(Box::new(self.parse_expression()));
+
+                            while let Some(token) = self.lexer.next_token() {
+                                match token.kind {
+                                    TokenKind::Comma => {
+                                        parameters.push(Box::new(self.parse_expression()));
+                                    }
+                                    _ => break,
+                                }
+                            }
+                        }
+                    }
+
+                    expression = Expression::FunctionCall {
+                        function: name,
+                        parameters,
+                    }
+
                 }
                 TokenKind::Semicolon => {
                     panic!("Expected expression at column: {}", token.column);

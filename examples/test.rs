@@ -8,6 +8,8 @@ fn main() {
     let {c: +{a, b}};
 
     set {a: 40};
+
+    call{calc:{20, call{calc:{10, 20}}}};
 }
 
 fn calc:{a, b} {
