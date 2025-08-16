@@ -31,13 +31,17 @@ pub enum Expression {
     },
     FunctionCall {
         function: Box<Expression>,
-        parameters: Vec<Box<Expression>>,
+        parameter: Box<Expression>,
     },
     ArrayExpression(Vec<Box<Expression>>),
     ObjectExpression(HashMap<String, Expression>),
     PropertyAccess {
         object: String,
         property: Box<Expression>
+    },
+    ArrayIndex {
+        array: Box<Expression>,
+        index: Box<Expression>
     }
 }
 
@@ -46,7 +50,6 @@ pub enum ASTNode {
     FunctionDeclaration {
         start: usize,
         name: String,
-        parameters: Vec<String>,
         content: Vec<ASTNode>,
     },
     VariableDeclaration {

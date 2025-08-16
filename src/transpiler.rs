@@ -29,17 +29,11 @@ impl Transpiler {
             ASTNode::FunctionDeclaration {
                 start: _,
                 name,
-                parameters,
                 content,
             } => {
-                let params = parameters.join(", ");
-                let body = content
-                    .iter()
-                    .map(Transpiler::transpile_node)
-                    .collect::<Vec<_>>()
-                    .join("\n");
+                let body = Transpiler::transpile_block(content);
 
-                code.push_str(format!("function {name}({params}) {{\n{body}\n}}\n").as_str());
+                code.push_str(format!("function {name}(param) {{\n{body}\n}}\n").as_str());
             }
             ASTNode::VariableDeclaration { start: _, vars } => {
                 let vars = vars
@@ -81,43 +75,7 @@ impl Transpiler {
 
                 code.push_str(format!("const {vars};").as_str());
             }
-            ASTNode::WhenExpression {
-                start: _,
-                expression,
-                content,
-            } => {
-                let expression = Transpiler::transpile_expression(expression);
-                let body = content
-                    .iter()
-                    .map(Transpiler::transpile_node)
-                    .collect::<Vec<_>>()
-                    .join("\n");
-
-                code.push_str(format!("if ({expression}) {{\n{body}\n}}\n").as_str());
-            }
-            ASTNode::OrWhenExpression {
-                start: _,
-                expression,
-                content,
-            } => {
-                let expression = Transpiler::transpile_expression(expression);
-                let body = content
-                    .iter()
-                    .map(Transpiler::transpile_node)
-                    .collect::<Vec<_>>()
-                    .join("\n");
-
-                code.push_str(format!("else if ({expression}) {{\n{body}\n}}\n").as_str());
-            }
-            ASTNode::OrExpression { start: _, content } => {
-                let body = content
-                    .iter()
-                    .map(Transpiler::transpile_node)
-                    .collect::<Vec<_>>()
-                    .join("\n");
-
-                code.push_str(format!("else {{\n{body}\n}}\n").as_str());
-            }
+            _ => {}
         }
 
         code
@@ -132,16 +90,16 @@ impl Transpiler {
             Expression::Identifier(id) => id.to_string(),
             Expression::FunctionCall {
                 function,
-                parameters,
+                parameter,
             } => {
                 let function = Transpiler::transpile_expression(function);
-                let params = parameters
-                    .iter()
-                    .map(|x| Transpiler::transpile_expression(x))
-                    .collect::<Vec<_>>()
-                    .join(",");
+                let mut parameter = Transpiler::transpile_expression(parameter);
 
-                format!("{function}({params})")
+                if parameter == "{}" {
+                    parameter = String::new();
+                }
+
+                format!("{function}({parameter})")
             }
             Expression::Binary { left, op, right } => {
                 let left = Transpiler::transpile_expression(left);
@@ -171,7 +129,11 @@ impl Transpiler {
                 format!("[{items}]")
             }
             Expression::ObjectExpression(hashmap) => {
-                let obj = hashmap.iter().map(|x| format!("{}: {}", x.0, Transpiler::transpile_expression(x.1))).collect::<Vec<_>>().join(",");
+                let obj = hashmap
+                    .iter()
+                    .map(|x| format!("{}: {}", x.0, Transpiler::transpile_expression(x.1)))
+                    .collect::<Vec<_>>()
+                    .join(",");
 
                 format!("{{{obj}}}")
             }
@@ -179,6 +141,68 @@ impl Transpiler {
                 let property = Transpiler::transpile_expression(property);
                 format!("{object}.{property}")
             }
+            Expression::ArrayIndex { array, index } => {
+                let array = Transpiler::transpile_expression(array);
+                let index = Transpiler::transpile_expression(index);
+
+                format!("{array}[{index}]")
+            }
         }
+    }
+
+    fn transpile_block(nodes: &[ASTNode]) -> String {
+        let mut code = String::new();
+        let mut i = 0;
+
+        while i < nodes.len() {
+            match &nodes[i] {
+                ASTNode::WhenExpression {
+                    expression,
+                    content,
+                    ..
+                } => {
+                    code.push_str(&format!(
+                        "if ({}) {{\n",
+                        Transpiler::transpile_expression(expression)
+                    ));
+                    code.push_str(&Transpiler::transpile_block(content));
+                    code.push_str("}\n");
+
+                    i += 1;
+                    while i < nodes.len() {
+                        match &nodes[i] {
+                            ASTNode::OrWhenExpression {
+                                expression,
+                                content,
+                                ..
+                            } => {
+                                code.push_str(&format!(
+                                    "else if ({}) {{\n",
+                                    Transpiler::transpile_expression(expression)
+                                ));
+                                code.push_str(&Transpiler::transpile_block(content));
+                                code.push_str("}\n");
+                                i += 1;
+                            }
+                            ASTNode::OrExpression { content, .. } => {
+                                code.push_str("else {\n");
+                                code.push_str(&Transpiler::transpile_block(content));
+                                code.push_str("}\n");
+                                i += 1;
+                                break;
+                            }
+                            _ => break,
+                        }
+                    }
+                }
+                other => {
+                    code.push_str(&Transpiler::transpile_node(other));
+                    code.push('\n');
+                    i += 1;
+                }
+            }
+        }
+
+        code
     }
 }

@@ -63,9 +63,7 @@ impl Parser {
                                     content = self.parse(true);
                                 }
                             }
-                        }
-
-                        if token.kind == TokenKind::LBrace {
+                        } else if token.kind == TokenKind::LBrace {
                             content = self.parse(true);
                         }
                     }
@@ -73,7 +71,6 @@ impl Parser {
                     nodes.push(ASTNode::FunctionDeclaration {
                         start,
                         name,
-                        parameters,
                         content,
                     })
                 }
@@ -101,38 +98,38 @@ impl Parser {
                         vars: self.parse_vars(token),
                     })
                 }
-                TokenKind::Call => {
-                    let mut name: Expression = Expression::Identifier(String::new());
-                    let mut parameters: Vec<Box<Expression>> = Vec::new();
+                TokenKind::Dollar => {
+                    let mut name: Option<Expression> = None;
+                    let mut parameter: Option<Expression> = None;
 
                     if let Some(token) = self.lexer.next_token()
                         && token.kind == TokenKind::LBrace
                     {
-                        name = self.parse_expression();
+                        name = Some(self.parse_expression());
 
                         if let Some(token) = self.lexer.next_token() {
-                            if token.kind == TokenKind::Colon
-                                && let Some(token) = self.lexer.next_token()
-                                && token.kind == TokenKind::LBrace
-                            {
-                                parameters.push(Box::new(self.parse_expression()));
-
-                                while let Some(token) = self.lexer.next_token() {
-                                    match token.kind {
-                                        TokenKind::Comma => {
-                                            parameters.push(Box::new(self.parse_expression()));
-                                        }
-                                        _ => break,
-                                    }
-                                }
+                            if token.kind == TokenKind::Colon {
+                                parameter = Some(self.parse_expression());
                             }
                         }
                     }
 
-                    nodes.push(ASTNode::Expression(Expression::FunctionCall {
-                        function: Box::new(name),
-                        parameters,
-                    }))
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::RBrace
+                    {}
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::Semicolon
+                    {}
+
+                    if let Some(name) = name
+                        && let Some(parameter) = parameter
+                    {
+                        nodes.push(ASTNode::Expression(Expression::FunctionCall {
+                            function: Box::new(name),
+                            parameter: Box::new(parameter),
+                        }))
+                    }
                 }
                 TokenKind::Return => {
                     let start = token.column;
@@ -269,36 +266,33 @@ impl Parser {
                         right: Box::new(right),
                     }
                 }
-                TokenKind::Call => {
-                    let mut name: Expression = Expression::Identifier(String::new());
-                    let mut parameters: Vec<Box<Expression>> = Vec::new();
+                TokenKind::Dollar => {
+                    let mut name: Option<Expression> = None;
+                    let mut parameter: Option<Expression> = None;
 
                     if let Some(token) = self.lexer.next_token()
                         && token.kind == TokenKind::LBrace
                     {
-                        name = self.parse_expression();
+                        name = Some(self.parse_expression());
 
-                        if let Some(token) = self.lexer.next_token()
-                            && token.kind == TokenKind::Colon
-                            && let Some(token) = self.lexer.next_token()
-                            && token.kind == TokenKind::LBrace
-                        {
-                            parameters.push(Box::new(self.parse_expression()));
-
-                            while let Some(token) = self.lexer.next_token() {
-                                match token.kind {
-                                    TokenKind::Comma => {
-                                        parameters.push(Box::new(self.parse_expression()));
-                                    }
-                                    _ => break,
-                                }
+                        if let Some(token) = self.lexer.next_token() {
+                            if token.kind == TokenKind::Colon {
+                                parameter = Some(self.parse_expression());
                             }
                         }
                     }
 
-                    expression = Expression::FunctionCall {
-                        function: Box::new(name),
-                        parameters,
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::RBrace
+                    {}
+
+                    if let Some(name) = name
+                        && let Some(parameter) = parameter
+                    {
+                        expression = Expression::FunctionCall {
+                            function: Box::new(name),
+                            parameter: Box::new(parameter),
+                        }
                     }
                 }
                 TokenKind::LBracket => {
@@ -363,6 +357,31 @@ impl Parser {
                         expression = Expression::PropertyAccess {
                             object,
                             property: Box::new(property),
+                        }
+                    }
+                }
+                TokenKind::At => {
+                    let mut array: Option<Expression> = None;
+                    let mut index: Option<Expression> = None;
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                    {
+                        array = Some(self.parse_expression());
+
+                        if let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::Comma
+                        {
+                            index = Some(self.parse_expression());
+                        }
+                    }
+
+                    if let Some(array) = array
+                        && let Some(index) = index
+                    {
+                        expression = Expression::ArrayIndex {
+                            array: Box::new(array),
+                            index: Box::new(index),
                         }
                     }
                 }

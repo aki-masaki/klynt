@@ -8,14 +8,17 @@ fn main() {
     let {a: 25, b: 30, str: "Hello"};
     let {c: +{a, b}};
 
-    let {arr: [1, 2, 3, "hi", a, +{b, 10}, call{calc:{5, 5}}]};
-    let {object: (data: "hello", count: 0, inner: (text: "Hello World"))};
+    let {arr: [1, 2, 3, "hi", a, +{b, 10}, ${calc:(a: 5, b: 5)}]};
+    let {list: [1, 2, 3]};
+    let {object: (data: "hello", count: 0, inner: (text: "Hello World", list: [@{list, 0}, @{list, 1}, @{list, 2}]))};
 
     let {count: .{object, count}, text: .{object, .{inner, text}}};
 
-    let {num: (a: call{.{a, toString}}, b: call{.{b, toString}})};
+    let {num: (a: ${.{a, toString}:()}, b: ${.{b, toString}:()}, c: @{arr, 2}, d: @{.{object, .{inner, list}}, -{.{list, length}, 1}})};
 
-    call{calc:{20, call{calc:{10, 20}}}};
+    ${calc:(a: a, b: b)};
+
+    ${.{a, toString}:()};
 
     when:{>{+{a, b}, 10}} {
         set {a: 20};
@@ -26,10 +29,10 @@ fn main() {
     }
 }
 
-fn calc:{a, b} {
+fn calc {
     const {offset: 10};
 
-    ret +{a, -{b, offset}};
+    ret +{.{param, a}, -{.{param, b}, offset}};
 }
 "#,
     );

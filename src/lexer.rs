@@ -5,7 +5,6 @@ pub enum TokenKind {
     Let,
     Set,
     Const,
-    Call,
     When,
     OrWhen,
     Or,
@@ -29,7 +28,9 @@ pub enum TokenKind {
     LPar,
     RPar,
     Semicolon,
-    Dot
+    Dot,
+    At,
+    Dollar
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -80,8 +81,6 @@ impl Lexer {
             Some(self.new_token(TokenKind::Set, "set"))
         } else if self.lookup_ahead("const") {
             Some(self.new_token(TokenKind::Const, "const"))
-        } else if self.lookup_ahead("call") {
-            Some(self.new_token(TokenKind::Call, "call"))
         } else if self.lookup_ahead("when") {
             Some(self.new_token(TokenKind::When, "when"))
         } else if self.lookup_ahead("orwhen") {
@@ -107,6 +106,8 @@ impl Lexer {
                 '(' => Some(self.new_token(TokenKind::LPar, "(")),
                 ')' => Some(self.new_token(TokenKind::RPar, ")")),
                 '.' => Some(self.new_token(TokenKind::Dot, ".")),
+                '@' => Some(self.new_token(TokenKind::At, "@")),
+                '$' => Some(self.new_token(TokenKind::Dollar, "$")),
                 '"' => {
                     let mut literal = String::from("");
                     let mut length = 1;
