@@ -5,11 +5,23 @@ pub enum Value {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Variable(pub String, pub Value);
+pub struct Variable(pub String, pub Expression);
+
+#[derive(Debug, PartialEq)]
+pub enum Operator {
+    Plus,
+    Minus
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Value(Value),
+    Identifier(String),
+    Binary {
+        left: Box<Expression>,
+        op: Operator,
+        right: Box<Expression>
+    }
 }
 
 #[derive(Debug, PartialEq)]

@@ -1,5 +1,6 @@
 use crate::ast::ASTNode;
 use crate::ast::Expression;
+use crate::ast::Operator;
 use crate::ast::Value;
 use crate::ast::Variable;
 use crate::lexer::Lexer;
@@ -91,36 +92,20 @@ impl Parser {
                                 TokenKind::Identifier => {
                                     current_name = Some(token.lexeme);
                                 }
-                                TokenKind::Number => {
-                                    if let Some(name) = current_name.take() {
-                                        let value =
-                                            Value::Number(token.lexeme.parse::<i16>().unwrap());
+                                TokenKind::Colon => {
+                                    let expression = self.parse_expression();
 
-                                        vars.push(Variable(name, value));
-                                    } else {
-                                        panic!(
-                                            "Expected variable name before value at column {}",
-                                            token.column
-                                        );
+                                    if let Some(name) = current_name.take() {
+                                        vars.push(Variable(name, expression));
                                     }
                                 }
-                                TokenKind::StringLiteral => {
-                                    if let Some(name) = current_name.take() {
-                                        let value = Value::Literal(token.lexeme);
-
-                                        vars.push(Variable(name, value));
-                                    } else {
-                                        panic!(
-                                            "Expected variable name before value at column {}",
-                                            token.column
-                                        );
-                                    }
+                                TokenKind::Comma => {
+                                    
                                 }
-                                TokenKind::Colon | TokenKind::Comma => {}
                                 _ => {
                                     panic!(
                                         "Unexpected token {:?} in variable declaration",
-                                        token.kind
+                                        token.lexeme
                                     );
                                 }
                             }
@@ -133,26 +118,7 @@ impl Parser {
                 }
                 TokenKind::Return => {
                     let start = token.column;
-                    let mut expression = Expression::Value(Value::Literal(String::new()));
-
-                    if let Some(token) = self.lexer.next_token() {
-                        match token.kind {
-                            TokenKind::StringLiteral => {
-                                expression = Expression::Value(Value::Literal(token.lexeme));
-                            }
-                            TokenKind::Number => {
-                                expression = Expression::Value(Value::Number(
-                                    token.lexeme.parse::<i16>().unwrap(),
-                                ));
-                            }
-                            TokenKind::Semicolon => {
-                                panic!("Expected expression after return at column: {start}");
-                            }
-                            _ => {
-                                panic!("Unexpected token after return at column: {start}");
-                            }
-                        }
-                    }
+                    let expression = self.parse_expression();
 
                     nodes.push(ASTNode::ReturnExpression { start, expression })
                 }
@@ -161,5 +127,57 @@ impl Parser {
         }
 
         nodes
+    }
+
+    fn parse_expression(&mut self) -> Expression {
+        let mut expression = Expression::Value(Value::Literal(String::new()));
+
+        if let Some(token) = self.lexer.next_token() {
+            match token.kind {
+                TokenKind::StringLiteral => {
+                    expression = Expression::Value(Value::Literal(token.lexeme));
+                }
+                TokenKind::Number => {
+                    expression =
+                        Expression::Value(Value::Number(token.lexeme.parse::<i16>().unwrap()));
+                }
+                TokenKind::Identifier => expression = Expression::Identifier(token.lexeme),
+                TokenKind::Plus | TokenKind::Minus => {
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                    {}
+
+                    let left = self.parse_expression();
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::Comma
+                    {}
+
+                    let right = self.parse_expression();
+
+                    expression = Expression::Binary {
+                        left: Box::new(left),
+                        op: match token.kind {
+                            TokenKind::Plus => Operator::Plus,
+                            TokenKind::Minus => Operator::Minus,
+                            // Impossible
+                            _ => Operator::Plus,
+                        },
+                        right: Box::new(right),
+                    }
+                }
+                TokenKind::Semicolon => {
+                    panic!("Expected expression at column: {}", token.column);
+                }
+                _ => {
+                    panic!(
+                        "Unexpected token: {} at column: {}",
+                        token.lexeme, token.column
+                    );
+                }
+            }
+        }
+
+        expression
     }
 }

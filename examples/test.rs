@@ -5,10 +5,11 @@ fn main() {
     let source = String::from(
         r#"fn main {
     let {a: 25, b: 30, str: "Hello"};
+    let {c: +{a, b}};
 }
 
 fn calc:{a, b} {
-    ret 20;
+    ret +{a, +{b, 10}};
 }
 "#,
     );
