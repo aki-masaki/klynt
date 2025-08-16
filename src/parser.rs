@@ -338,6 +338,37 @@ impl Parser {
 
                     expression = Expression::ObjectExpression(hash_map);
                 }
+                TokenKind::Dot => {
+                    let mut object: Option<String> = None;
+                    let mut property: Option<Expression> = None;
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                    {
+                        if let Some(identifier) = self.lexer.next_token() {
+                            object = Some(identifier.lexeme);
+                        }
+
+                        if let Some(token) = self.lexer.next_token()
+                            && token.kind == TokenKind::Comma
+                        {
+                            property = Some(self.parse_expression());
+
+                            if let Some(token) = self.lexer.next_token()
+                                && token.kind == TokenKind::RBrace
+                            {}
+                        }
+                    }
+
+                    if let Some(object) = object
+                        && let Some(property) = property
+                    {
+                        expression = Expression::PropertyAccess {
+                            object,
+                            property: Box::new(property),
+                        }
+                    }
+                }
                 TokenKind::Comma => {
                     return self.parse_expression();
                 }

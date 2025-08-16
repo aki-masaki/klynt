@@ -35,6 +35,10 @@ pub enum Expression {
     },
     ArrayExpression(Vec<Box<Expression>>),
     ObjectExpression(HashMap<String, Expression>),
+    PropertyAccess {
+        object: String,
+        property: Box<Expression>
+    }
 }
 
 #[derive(Debug, PartialEq)]

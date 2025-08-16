@@ -175,6 +175,10 @@ impl Transpiler {
 
                 format!("{{{obj}}}")
             }
+            Expression::PropertyAccess { object, property } => {
+                let property = Transpiler::transpile_expression(property);
+                format!("{object}.{property}")
+            }
         }
     }
 }

@@ -9,7 +9,9 @@ fn main() {
     let {c: +{a, b}};
 
     let {arr: [1, 2, 3, "hi", a, +{b, 10}, call{calc:{5, 5}}]};
-    let {object: (data: "hello", count: 0)};
+    let {object: (data: "hello", count: 0, inner: (text: "Hello World"))};
+
+    let {count: .{object, count}, text: .{object, .{inner, text}}}
 
     set {a: 40};
 

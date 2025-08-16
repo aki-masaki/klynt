@@ -29,6 +29,7 @@ pub enum TokenKind {
     LPar,
     RPar,
     Semicolon,
+    Dot
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -105,6 +106,7 @@ impl Lexer {
                 ']' => Some(self.new_token(TokenKind::RBracket, "]")),
                 '(' => Some(self.new_token(TokenKind::LPar, "(")),
                 ')' => Some(self.new_token(TokenKind::RPar, ")")),
+                '.' => Some(self.new_token(TokenKind::Dot, ".")),
                 '"' => {
                     let mut literal = String::from("");
                     let mut length = 1;
