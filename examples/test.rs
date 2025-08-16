@@ -11,9 +11,9 @@ fn main() {
     let {arr: [1, 2, 3, "hi", a, +{b, 10}, call{calc:{5, 5}}]};
     let {object: (data: "hello", count: 0, inner: (text: "Hello World"))};
 
-    let {count: .{object, count}, text: .{object, .{inner, text}}}
+    let {count: .{object, count}, text: .{object, .{inner, text}}};
 
-    set {a: 40};
+    let {num: (a: call{.{a, toString}}, b: call{.{b, toString}})};
 
     call{calc:{20, call{calc:{10, 20}}}};
 

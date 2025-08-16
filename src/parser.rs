@@ -102,36 +102,35 @@ impl Parser {
                     })
                 }
                 TokenKind::Call => {
-                    let mut name = String::new();
+                    let mut name: Expression = Expression::Identifier(String::new());
                     let mut parameters: Vec<Box<Expression>> = Vec::new();
 
                     if let Some(token) = self.lexer.next_token()
                         && token.kind == TokenKind::LBrace
-                        && let Some(token) = self.lexer.next_token()
-                        && token.kind == TokenKind::Identifier
                     {
-                        name = token.lexeme;
+                        name = self.parse_expression();
 
-                        if let Some(token) = self.lexer.next_token()
-                            && token.kind == TokenKind::Colon
-                            && let Some(token) = self.lexer.next_token()
-                            && token.kind == TokenKind::LBrace
-                        {
-                            parameters.push(Box::new(self.parse_expression()));
+                        if let Some(token) = self.lexer.next_token() {
+                            if token.kind == TokenKind::Colon
+                                && let Some(token) = self.lexer.next_token()
+                                && token.kind == TokenKind::LBrace
+                            {
+                                parameters.push(Box::new(self.parse_expression()));
 
-                            while let Some(token) = self.lexer.next_token() {
-                                match token.kind {
-                                    TokenKind::Comma => {
-                                        parameters.push(Box::new(self.parse_expression()));
+                                while let Some(token) = self.lexer.next_token() {
+                                    match token.kind {
+                                        TokenKind::Comma => {
+                                            parameters.push(Box::new(self.parse_expression()));
+                                        }
+                                        _ => break,
                                     }
-                                    _ => break,
                                 }
                             }
                         }
                     }
 
                     nodes.push(ASTNode::Expression(Expression::FunctionCall {
-                        function: name,
+                        function: Box::new(name),
                         parameters,
                     }))
                 }
@@ -271,15 +270,13 @@ impl Parser {
                     }
                 }
                 TokenKind::Call => {
-                    let mut name = String::new();
+                    let mut name: Expression = Expression::Identifier(String::new());
                     let mut parameters: Vec<Box<Expression>> = Vec::new();
 
                     if let Some(token) = self.lexer.next_token()
                         && token.kind == TokenKind::LBrace
-                        && let Some(token) = self.lexer.next_token()
-                        && token.kind == TokenKind::Identifier
                     {
-                        name = token.lexeme;
+                        name = self.parse_expression();
 
                         if let Some(token) = self.lexer.next_token()
                             && token.kind == TokenKind::Colon
@@ -300,7 +297,7 @@ impl Parser {
                     }
 
                     expression = Expression::FunctionCall {
-                        function: name,
+                        function: Box::new(name),
                         parameters,
                     }
                 }

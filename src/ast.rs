@@ -30,7 +30,7 @@ pub enum Expression {
         right: Box<Expression>,
     },
     FunctionCall {
-        function: String,
+        function: Box<Expression>,
         parameters: Vec<Box<Expression>>,
     },
     ArrayExpression(Vec<Box<Expression>>),

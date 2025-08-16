@@ -118,7 +118,6 @@ impl Transpiler {
 
                 code.push_str(format!("else {{\n{body}\n}}\n").as_str());
             }
-            _ => {}
         }
 
         code
@@ -135,6 +134,7 @@ impl Transpiler {
                 function,
                 parameters,
             } => {
+                let function = Transpiler::transpile_expression(function);
                 let params = parameters
                     .iter()
                     .map(|x| Transpiler::transpile_expression(x))
@@ -157,7 +157,7 @@ impl Transpiler {
                         Operator::Divided => "/",
                         Operator::Gt => ">",
                         Operator::Lt => "<",
-                        Operator::Equal => "=",
+                        Operator::Equal => "==",
                     }
                 )
             }
