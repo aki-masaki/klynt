@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenKind {
     Fn,
     Return,
@@ -15,12 +15,12 @@ pub enum TokenKind {
     Semicolon,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
     pub kind: TokenKind,
-    lexeme: String,
-    line: usize,
-    column: usize,
+    pub lexeme: String,
+    pub line: usize,
+    pub column: usize,
 }
 
 pub struct Lexer {
@@ -123,7 +123,7 @@ impl Lexer {
         }
     }
 
-    pub fn advance(&mut self, n: usize) -> Option<char> {
+    fn advance(&mut self, n: usize) -> Option<char> {
         for _ in 0..n {
             if self.position >= self.input.len() {
                 return None;
@@ -144,7 +144,7 @@ impl Lexer {
         self.current_char()
     }
 
-    pub fn current_char(&self) -> Option<char> {
+    fn current_char(&self) -> Option<char> {
         if self.position < self.input.len() {
             Some(self.input[self.position])
         } else {
@@ -152,7 +152,7 @@ impl Lexer {
         }
     }
 
-    pub fn peek(&self, n: usize) -> Option<char> {
+    fn peek(&self, n: usize) -> Option<char> {
         if self.position + n < self.input.len() {
             return Some(self.input[self.position + n]);
         }
@@ -160,7 +160,7 @@ impl Lexer {
         None
     }
 
-    pub fn lookup_ahead(&self, s: &str) -> bool {
+    fn lookup_ahead(&self, s: &str) -> bool {
         for (i, item) in s.chars().enumerate() {
             if self.input[self.position + i] != item {
                 return false;
@@ -170,7 +170,7 @@ impl Lexer {
         true
     }
 
-    pub fn skip_whitespace(&mut self) {
+    fn skip_whitespace(&mut self) {
         while let Some(c) = self.current_char() {
             if !c.is_whitespace() {
                 break;
@@ -180,7 +180,7 @@ impl Lexer {
         }
     }
 
-    pub fn new_token(&mut self, kind: TokenKind, lexeme: &str) -> Token {
+    fn new_token(&mut self, kind: TokenKind, lexeme: &str) -> Token {
         self.advance(lexeme.len());
 
         Token {
