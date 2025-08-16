@@ -12,7 +12,10 @@ pub enum Operator {
     Plus,
     Minus,
     Times,
-    Divided
+    Divided,
+    Gt,
+    Lt,
+    Equal
 }
 
 #[derive(Debug, PartialEq)]
@@ -54,5 +57,19 @@ pub enum ASTNode {
         start: usize,
         expression: Expression,
     },
-    Expression(Expression)
+    Expression(Expression),
+    WhenExpression {
+        start: usize,
+        expression: Expression,
+        content: Vec<ASTNode>
+    },
+    OrWhenExpression {
+        start: usize,
+        expression: Expression,
+        content: Vec<ASTNode>
+    },
+    OrExpression {
+        start: usize,
+        content: Vec<ASTNode>
+    }
 }

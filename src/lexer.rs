@@ -6,6 +6,9 @@ pub enum TokenKind {
     Set,
     Const,
     Call,
+    When,
+    OrWhen,
+    Or,
     Colon,
     Comma,
     Identifier,
@@ -15,6 +18,9 @@ pub enum TokenKind {
     Minus,
     Times,
     Divided,
+    Gt,
+    Lt,
+    Equal,
     LBrace,
     RBrace,
     Semicolon,
@@ -70,7 +76,14 @@ impl Lexer {
             Some(self.new_token(TokenKind::Const, "const"))
         } else if self.lookup_ahead("call") {
             Some(self.new_token(TokenKind::Call, "call"))
-        } else if let Some(char) = current_char {
+        } else if self.lookup_ahead("when") {
+            Some(self.new_token(TokenKind::When, "when"))
+        }  else if self.lookup_ahead("orwhen") {
+            Some(self.new_token(TokenKind::OrWhen, "orwhen"))
+        } else if self.lookup_ahead("or") {
+            Some(self.new_token(TokenKind::Or, "or"))
+        }
+        else if let Some(char) = current_char {
             match char {
                 '{' => Some(self.new_token(TokenKind::LBrace, "{")),
                 '}' => Some(self.new_token(TokenKind::RBrace, "}")),
@@ -81,6 +94,9 @@ impl Lexer {
                 '-' => Some(self.new_token(TokenKind::Minus, "-")),
                 '*' => Some(self.new_token(TokenKind::Times, "*")),
                 '/' => Some(self.new_token(TokenKind::Divided, "/")),
+                '>' => Some(self.new_token(TokenKind::Gt, ">")),
+                '<' => Some(self.new_token(TokenKind::Lt, "<")),
+                '=' => Some(self.new_token(TokenKind::Equal, "=")),
                 '"' => {
                     let mut literal = String::from("");
                     let mut length = 1;

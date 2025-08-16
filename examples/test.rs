@@ -11,6 +11,14 @@ fn main() {
     set {a: 40};
 
     call{calc:{20, call{calc:{10, 20}}}};
+
+    when:{>{+{a, b}, 10}} {
+        set {a: 20};
+    } orwhen:{<{-{a, b}, 20}} {
+        set {b: 30};
+    } or {
+        set {c: 50};
+    }
 }
 
 fn calc:{a, b} {
@@ -26,4 +34,6 @@ fn calc:{a, b} {
     let transpiler = Transpiler::new(parser.parse(false));
 
     println!("{}", transpiler.transpile());
+    //
+    //println!("{:?}", parser.parse(false));
 }

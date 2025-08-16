@@ -140,6 +140,80 @@ impl Parser {
 
                     nodes.push(ASTNode::ReturnExpression { start, expression })
                 }
+                TokenKind::When => {
+                    let start = token.column;
+                    let mut expression = Expression::Identifier(String::new());
+                    let mut content: Vec<ASTNode> = Vec::new();
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::Colon
+                        && let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                    {
+                        expression = self.parse_expression();
+
+                        while let Some(token) = self.lexer.next_token() {
+                            if token.kind == TokenKind::RBrace {
+                                continue;
+                            }
+
+                            if token.kind == TokenKind::LBrace {
+                                content = self.parse(true);
+
+                                break;
+                            }
+                        }
+                    }
+
+                    nodes.push(ASTNode::WhenExpression {
+                        start,
+                        expression,
+                        content,
+                    })
+                }
+                TokenKind::OrWhen => {
+                    let start = token.column;
+                    let mut expression = Expression::Identifier(String::new());
+                    let mut content: Vec<ASTNode> = Vec::new();
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::Colon
+                        && let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                    {
+                        expression = self.parse_expression();
+
+                        while let Some(token) = self.lexer.next_token() {
+                            if token.kind == TokenKind::RBrace {
+                                continue;
+                            }
+
+                            if token.kind == TokenKind::LBrace {
+                                content = self.parse(true);
+
+                                break;
+                            }
+                        }
+                    }
+
+                    nodes.push(ASTNode::OrWhenExpression {
+                        start,
+                        expression,
+                        content,
+                    })
+                }
+                TokenKind::Or => {
+                    let start = token.column;
+                    let mut content: Vec<ASTNode> = Vec::new();
+
+                    if let Some(token) = self.lexer.next_token()
+                        && token.kind == TokenKind::LBrace
+                    {
+                        content = self.parse(true);
+                    }
+
+                    nodes.push(ASTNode::OrExpression { start, content })
+                }
                 _ => {}
             }
         }
@@ -160,7 +234,13 @@ impl Parser {
                         Expression::Value(Value::Number(token.lexeme.parse::<i16>().unwrap()));
                 }
                 TokenKind::Identifier => expression = Expression::Identifier(token.lexeme),
-                TokenKind::Plus | TokenKind::Minus => {
+                TokenKind::Plus
+                | TokenKind::Minus
+                | TokenKind::Times
+                | TokenKind::Divided
+                | TokenKind::Gt
+                | TokenKind::Lt
+                | TokenKind::Equal => {
                     if let Some(token) = self.lexer.next_token()
                         && token.kind == TokenKind::LBrace
                     {}
@@ -178,6 +258,11 @@ impl Parser {
                         op: match token.kind {
                             TokenKind::Plus => Operator::Plus,
                             TokenKind::Minus => Operator::Minus,
+                            TokenKind::Times => Operator::Times,
+                            TokenKind::Divided => Operator::Divided,
+                            TokenKind::Gt => Operator::Gt,
+                            TokenKind::Lt => Operator::Lt,
+                            TokenKind::Equal => Operator::Equal,
                             // Impossible
                             _ => Operator::Plus,
                         },
@@ -217,6 +302,9 @@ impl Parser {
                         function: name,
                         parameters,
                     }
+                }
+                TokenKind::Comma => {
+                    return self.parse_expression();
                 }
                 TokenKind::Semicolon => {
                     panic!("Expected expression at column: {}", token.column);

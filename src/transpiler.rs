@@ -1,6 +1,6 @@
-use crate::ast::Operator;
 use crate::ast::ASTNode;
 use crate::ast::Expression;
+use crate::ast::Operator;
 use crate::ast::Value;
 
 pub struct Transpiler {
@@ -81,6 +81,46 @@ impl Transpiler {
 
                 code.push_str(format!("const {vars};").as_str());
             }
+            ASTNode::WhenExpression {
+                start: _,
+                expression,
+                content,
+            } => {
+                let expression = Transpiler::transpile_expression(expression);
+                let body = content
+                    .iter()
+                    .map(Transpiler::transpile_node)
+                    .collect::<Vec<_>>()
+                    .join("\n");
+
+                code.push_str(format!("if ({expression}) {{\n{body}\n}}\n").as_str());
+            }
+            ASTNode::OrWhenExpression {
+                start: _,
+                expression,
+                content,
+            } => {
+                let expression = Transpiler::transpile_expression(expression);
+                let body = content
+                    .iter()
+                    .map(Transpiler::transpile_node)
+                    .collect::<Vec<_>>()
+                    .join("\n");
+
+                code.push_str(format!("else if ({expression}) {{\n{body}\n}}\n").as_str());
+            }
+            ASTNode::OrExpression {
+                start: _,
+                content,
+            } => {
+                let body = content
+                    .iter()
+                    .map(Transpiler::transpile_node)
+                    .collect::<Vec<_>>()
+                    .join("\n");
+
+                code.push_str(format!("else {{\n{body}\n}}\n").as_str());
+            }
             _ => {}
         }
 
@@ -111,12 +151,18 @@ impl Transpiler {
                 let right = Transpiler::transpile_expression(right);
 
                 // TODO: handle different operators
-                format!("({left}{}{right})", match op {
-                    Operator::Plus => "+",
-                    Operator::Minus => "-",
-                    Operator::Times => "*",
-                    Operator::Divided => "/"
-                })
+                format!(
+                    "({left}{}{right})",
+                    match op {
+                        Operator::Plus => "+",
+                        Operator::Minus => "-",
+                        Operator::Times => "*",
+                        Operator::Divided => "/",
+                        Operator::Gt => ">",
+                        Operator::Lt => "<",
+                        Operator::Equal => "=",
+                    }
+                )
             }
         }
     }
